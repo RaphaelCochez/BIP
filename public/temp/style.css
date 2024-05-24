@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Bhai+2&display=swap');
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: 'Baloo Bhai 2', cursive;
+    background: url('https://www.caninejournal.com/wp-content/uploads/golden-puppy-eating-dog-food-out-of-a-bowl-on-the-ground-jpg.jpg') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(3px);
+    z-index: -1;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 25px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    max-width: 350px;
+    text-align: center;
+    transition: transform 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+input[type="number"] {
+    width: 70%;
+    padding: 15px;
+    border: 2px solid #219ebc;
+    border-radius: 25px;
+    outline: none;
+    font-size: 1.2rem;
+    margin-right: 10px;
+}
+
+button {
+    background-color: #023047;
+    color: #ffffff;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    padding: 15px 30px;
+    transition: background-color 0.3s;
+    outline: none;
+}
+
+button:hover {
+    background-color: #fb8500;
+}
+
+.hidden {
+    display: none;
+}
+
+.animate {
+    display: block;
+    font-size: 1.5rem;
+    color: #ffb703;
+    animation: slideIn 0.5s ease-out, pulse 1s infinite;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
