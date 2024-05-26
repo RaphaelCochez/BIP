@@ -6,6 +6,14 @@
     --tert-clr: #77A5AC;
     --bg-clr: #FCFDFC;
 }
+@font-face {
+    font-family: font;
+    src: url(../assets/font/Raleway-Regular.ttf);
+}
+
+* {
+    font-family: font;
+}
 
 
 body {
