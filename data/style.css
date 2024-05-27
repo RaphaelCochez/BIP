@@ -1,19 +1,6 @@
 
-/*add index.html css here
-void handleCSS(AsyncWebServerRequest* request) {
-    // Serve the CSS file
-    File cssFile = LittleFS.open("/style.css", "r");
-    if (cssFile) {
-        request->send(200, "text/css", cssFile.readString());
-        cssFile.close();
-    } 
-}
--> this function can read all single page css but not multiple at the same time
--> we are short on local ram memory because of the local buffering of all the css files, html content, the logo.svg and config.json files
--> see memory leak image on github
--> thats why we need to add all css into one file and simplify it 
--> index.html can stay as is -> see result on github
-*/
+/*add index.html css here*/
+
 
 h2{
     color: red;
