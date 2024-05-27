@@ -1,0 +1,8 @@
+{
+        "NETWORKSSID":"BIPPUPPYFEEDER",
+        "NETWORKPASPORT":"123456789",
+        "min_portions":0,
+        "max_portions":5,
+        "rotations_per_portion": 2,
+        "steps_per_portion": 200
+}
