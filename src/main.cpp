@@ -1,10 +1,15 @@
 /*
  - Author: Raphael Cochez
- - Date: 21/05/24
- - Version: V0.1
+ - Date: 27/05/24
+ - Version: V0.2
  - License: Just use it lol
 
- Super simple webserver with basic handling and routing
+  webserver with basic handling and routing
+  reads the config.json file as its main parameters
+  has the ability to change a parameter
+  serves html, css and a svg logo to a root (/) location.4
+  this code needs a data/config.json, a data/index.html, a data/index.js and a data/logo.svg file uploaded in the SPDIFFS in order to work
+
 */
 
 #include <ESP8266WiFi.h>
@@ -13,19 +18,108 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 
-const char* ssid = "BIPPUPPYFEEDER"; // Set your desired AP SSID
-const char* password = "123456789"; // Set your desired AP password
+
+class Configuration {
+public:
+    Configuration(const char* filename) : filename(filename) {}
+
+    bool readParameters() {
+        File file = LittleFS.open(filename, "r");
+        if (!file) {
+            Serial.println(F("Error opening config file for reading"));
+            return false;
+        }
+
+        StaticJsonDocument<300> doc; // Use JsonDocument instead of StaticJsonDocument
+        DeserializationError error = deserializeJson(doc, file);
+        file.close();
+
+        if (error) {
+            Serial.print(F("deserializeJson() failed: "));
+            Serial.println(error.f_str());
+            return false;
+        }
+
+        JsonObject wifiConfig = doc["WiFi"];
+        NETWORK_SSID = wifiConfig["KEY_NETWORK_SSID"].as<const char*>(); // Update the pointer
+        NETWORK_PASSWORD = wifiConfig["KEY_NETWORK_PASSWORD"].as<const char*>(); // Update the pointer
+
+        JsonObject paramConfig = doc["parameters"];
+        min_portions = paramConfig["min_portions"];
+        max_portions = paramConfig["max_portions"];
+        rotations_per_portion = paramConfig["rotations_per_portion"];
+        steps_per_portion = paramConfig["steps_per_portion"];
+
+        return true;
+    }
+
+    const char* getNetworkSSID() const {
+        return NETWORK_SSID;
+    }
+
+    const char* getNetworkPassword() const {
+        return NETWORK_PASSWORD;
+    }
+
+    int getMinPortions() const {
+        return min_portions;
+    }
+
+    int getMaxPortions() const {
+        return max_portions;
+    }
+
+    int getRotationsPerPortion() const {
+        return rotations_per_portion;
+    }
+
+    int getStepsPerPortion() const {
+        return steps_per_portion;
+    }
+
+    void updateMinPortions(const int newValue) {
+        File file = LittleFS.open(filename, "w"); // Open in write mode
+        if (!file) {
+            Serial.println(F("Error opening config file for writing"));
+            return;
+        }
+
+        DynamicJsonDocument doc(512); // Adjust the size as needed
+        DeserializationError error = deserializeJson(doc, file);
+        if (error) {
+            Serial.print(F("deserializeJson() failed: "));
+            Serial.println(error.f_str());
+            file.close();
+            return;
+        }
+
+        doc["parameters"]["min_portions"] = newValue;
+
+        file.seek(0); // Move to the beginning of the file
+        serializeJson(doc, file); // Write the updated JSON back to the file
+        file.close();
+    }
+
+private:
+    const char* filename;
+    const char* NETWORK_SSID = nullptr;
+    const char* NETWORK_PASSWORD = nullptr;
+    int min_portions = 0;
+    int max_portions = 0;
+    int rotations_per_portion = 0;
+    int steps_per_portion = 0;
+};
+
+Configuration config("/config.json");
+const char* ssid = "BIPPUPPYFEEDING";
+const char* password = "123456789";
 
 AsyncWebServer server(80); // Create an instance of AsyncWebServer
-
-
-
-
 void handleRoot(AsyncWebServerRequest* request) {
-    // Read the HTML file from LittleFS
+    // Serve the html file
     File htmlFile = LittleFS.open("/index.html", "r");
     if (htmlFile) {
-        request->send(htmlFile, "text/html");
+        request->send(200, "text/html", htmlFile.readString());
         htmlFile.close();
     } else {
         // Custom response when "index.html" is not found
@@ -34,142 +128,74 @@ void handleRoot(AsyncWebServerRequest* request) {
     }
 }
 
+
+
+void handleCSS(AsyncWebServerRequest* request) {
+    // Serve the CSS file
+    File cssFile = LittleFS.open("/style.css", "r");
+    if (cssFile) {
+        request->send(200, "text/css", cssFile.readString());
+        cssFile.close();
+    } 
+}
+
+
+void handleJS(AsyncWebServerRequest* request) {
+    // Serve the javascript
+    File jsFile = LittleFS.open("/index.js", "r");
+    if (jsFile) {
+        request->send(200, "application/javascript", jsFile.readString());
+        jsFile.close();
+    }
+}
+
+void handleLogo(AsyncWebServerRequest* request) {
+    // Serve the SVG logo
+    File logoFile = LittleFS.open("/logo.svg", "r");
+    if (logoFile) {
+        request->send(200, "image/svg+xml", logoFile.readString());
+        logoFile.close();
+    } 
+}
+
+
 void handleNotFound(AsyncWebServerRequest* request) {
     // Redirect all requests to the root ("/") to your desired webpage
     request->redirect("/");
 }
-
-void initWiFi(){
-    // Set wifi mode to be an acces point
-
-    WiFi.mode(WIFI_AP);
-    // Create an access point
-    WiFi.softAP(ssid, password);
-    IPAddress apIP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(apIP);
-}
-
-void initRoutes(){
-    server.on("/", HTTP_GET, handleRoot); // Handle requests to the root ("/") route
-    server.onNotFound(handleNotFound); // Handle requests to unknown routes
-}
-
-void printConfigJSON(){
-  File file = LittleFS.open("/config.json", "r");
-  if (!file) {
-    Serial.println("Error opening json config file for reading");
-    return;
-  }
-  Serial.println(file.readString());
-  file.close();  
-}
-
-void readConfigJSON(){
-  File file = LittleFS.open("/config.json", "r");
-  // Check if file exists
-  if (!file) {
-    Serial.println("Error opening json config file for reading");
-    return;
-  }
-  else{
-    Serial.println("Succesfully opening json config file for reading");
-    return;
-  }
-  file.close();  
-}
-
-void readNetworkCredentials(){
-  File file = LittleFS.open("/config.json", "r");
-  // set JSON file size
-  StaticJsonDocument<300> doc;
-  // Deserialize the JSON document
-  DeserializationError error = deserializeJson(doc, file);
-  // Test if parsing succeeds.
-  if (error) {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.f_str());
-    return;
-  }
-  // Print the contents of the json file
-  Serial.println(file.readString());
-
-  // Fetch values
-  const char* NETWORKSSID = doc["NETWORKSSID"];
-  const char* NETWORKPASPORT = doc["NETWORKPASPORT"];
-  const int min_portions = doc["min_portions"];
-  const int max_portions = doc["max_portions"];
-  const int rotations_per_portion = doc["rotations_per_portion"];
-  const int steps_per_portion = doc["steps_per_portion"];
-  
-  // Print the contents of the json file
-  Serial.println();
-
-  Serial.println(NETWORKSSID);
-  Serial.println(NETWORKPASPORT);
-  file.close(); 
- }
-void readParameters(){
-  File file = LittleFS.open("/config.json", "r");
-  // set JSON file size
-  StaticJsonDocument<300> doc;
-  // Deserialize the JSON document
-  DeserializationError error = deserializeJson(doc, file);
-  // Test if parsing succeeds.
-  if (error) {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.f_str());
-    return;
-  }
-
-  // Fetch values
-  const int min_portions = doc["min_portions"];
-  const int max_portions = doc["max_portions"];
-  const int rotations_per_portion = doc["rotations_per_portion"];
-  const int steps_per_portion = doc["steps_per_portion"];
-  
-  // Print the contents of the json file
-  Serial.println();
-  Serial.println(min_portions);
-  Serial.println(max_portions);
-  Serial.println(rotations_per_portion);
-  Serial.println(steps_per_portion);
-  file.close(); 
-
- }
-
-void writeConfigJSON(){
-File file = LittleFS.open("/config.json", "w");
- 
-  if (!file) {
-    Serial.println("Error opening json config file for writing");
-    return;
-  }
- 
-  int bytesWritten = file.print("TEST SPIFFS");
- 
-  if (bytesWritten == 0) {
-    Serial.println("File write failed");
-    return;
-  }
-  file.close();  
-}
-
-
 
 void setup() {
     Serial.begin(9600);
 
     // Initialize LittleFS
     LittleFS.begin();
-    initWiFi();
-    initRoutes();
-    readConfigJSON();
+
+    // Set WiFi mode to be an access point and create it
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP(ssid, password);
+
+    // create a ip adres for a client device
+    IPAddress apIP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+    Serial.println(apIP);
+
+    // Handle requests to the root ("/") route
+    server.on("/", HTTP_GET, handleRoot);
+    server.on("/style.css", HTTP_GET, handleCSS);
+    server.on("/index.js", HTTP_GET, handleJS);
+    server.on("/logo.svg", HTTP_GET, handleLogo);
+
+    // Handle form input
+
+
+    // Handle requests to unknown routes
+    server.onNotFound(handleNotFound);
+
+    // start server
     server.begin();
     Serial.println();
     Serial.println("Web server started in AP mode");
 }
 
 void loop() {
-   
 }
