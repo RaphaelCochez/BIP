@@ -1,3 +1,43 @@
-<html>
-    <h1>This thing works</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="index.js" type="text/javascript" defer></script>
+    <title>Koutapi</title>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="row">
+                <div class="three columns nav-child-pos">
+                    <img src="logo.svg" alt="Koutapi logo">
+                    <h1>Koutapi</h1>
+                </div>
+                <div class="nine columns">
+
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main>
+        
+        <div class="row center">
+            <div class="card">
+                <h2>Pick Portion(s)</h2>
+                <div class="input-container">
+                    <input type="number"  id="portionInput" placeholder="give a number..." oninput="checkInput()">
+                    <button id="submitButton" onclick="animateCard()">
+                        <i class="fas fa-paw"></i>
+                    </button>
+                </div>
+                <div id="animation" class="hidden">Portion confirmed!</div>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p class="center-text">Puppy Feeding 2 - BIP - <a href="https://soudashelter.org/">Souda Shelter Project</a></p>
+    </footer>
+</body>
 </html>
